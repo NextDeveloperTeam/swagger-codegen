@@ -21,7 +21,7 @@ jobs:
               # First, determine what the final version should be after replacing the revision placeholder with the build number
               mvn_revision=$(mvn help:evaluate -Dexpression=project.version -Drevision=${CIRCLE_BUILD_NUM} | egrep -v '\[|Download')
             else
-              mvn_revision=$(mvn help:evaluate -Dexpression=project.version -Drevision=${CIRCLE_BUILD_NUM} | egrep -v '\[|Download')
+              mvn_revision=$(mvn help:evaluate -Dexpression=project.version -Drevision=${CIRCLE_SHA1} | egrep -v '\[|Download')
             fi
 
             echo "Final Maven version is: ${mvn_revision}"
@@ -35,7 +35,7 @@ jobs:
             # Insert the `distributionManagement` XML snippet from our env var secret
             mvn_distro_xml=$(echo $MVN_DISTRO_XML_BASE64 | base64 --decode)
 
-            xmlstarlet ed -N xmlns=http://maven.apache.org/POM/4.0.0 -a "//xmlns:project" -t elem -n distributionManagement \
+            xmlstarlet ed -N xmlns=http://maven.apache.org/POM/4.0.0 -i "//xmlns:project" -t elem -n distributionManagement \
               -v "$(xmlstarlet sel -t -c "//distributionManagement/*" <<< "$mvn_distro_xml")" pom.xml | xmlstarlet unesc
 
             mvn package
