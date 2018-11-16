@@ -33,7 +33,7 @@ jobs:
           name: Build and publish
           command: |
             # Insert the `distributionManagement` XML snippet from our env var secret
-            mvn_distro_xml=$(echo '$MVN_DISTRO_XML_BASE64' | base64 --decode)
+            mvn_distro_xml=$(echo $MVN_DISTRO_XML_BASE64 | base64 --decode)
             sed -i '$i'"$mvn_distro_xml" pom.xml
 
             mvn package
