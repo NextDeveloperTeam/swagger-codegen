@@ -40,7 +40,10 @@ jobs:
             mv pom.xml.tmp pom.xml
 
             mvn -B package
-            mvn -B deploy
+            mvn -B deploy -N -DskipTests
+
+            cd modules/swagger-codegen
+            mvn -B deploy -DskipTests
 
       - run:
           # Reset the pom.xml so that the `restore_cache` and `save_cache` checksums are consistent, since
