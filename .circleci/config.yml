@@ -34,7 +34,9 @@ jobs:
           command: |
             # Insert the `distributionManagement` XML snippet from our env var secret
             mvn_distro_xml=$(echo $MVN_DISTRO_XML_BASE64 | base64 --decode)
-            sed -i '$i'"$mvn_distro_xml" pom.xml
+
+            xmlstarlet ed -N xmlns=http://maven.apache.org/POM/4.0.0 -a "//xmlns:project" -t elem -n distributionManagement \
+              -v "$(xmlstarlet sel -t -c "//distributionManagement/*" <<< "$mvn_distro_xml")" pom.xml | xmlstarlet unesc
 
             mvn package
             mvn deploy
