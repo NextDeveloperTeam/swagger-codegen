@@ -1,0 +1,64 @@
+version: 2
+jobs:
+  build:
+    working_directory: ~/repo
+
+    docker:
+      - image: $DOCKER_REPO_URL/circleci-jdk8:latest
+
+
+    steps:
+      - checkout
+
+      - restore_cache:
+          keys:
+            - swagger-codegen-{{ checksum "pom.xml" }}
+
+      - run:
+          name: Set Maven versions
+          command: |
+            if [[ ${CIRCLE_BRANCH} = master ]]; then
+              # First, determine what the final version should be after replacing the revision placeholder with the build number
+              mvn_revision=$(mvn help:evaluate -Dexpression=project.version -Drevision=${CIRCLE_BUILD_NUM} | egrep -v '\[|Download')
+            else
+              mvn_revision=$(mvn help:evaluate -Dexpression=project.version -Drevision=${CIRCLE_BUILD_NUM} | egrep -v '\[|Download')
+            fi
+
+            echo "Final Maven version is: ${mvn_revision}"
+
+            # Set parent/child modules to final version
+            mvn versions:set -DnewVersion=${mvn_revision}
+
+      - run:
+          name: Build and publish
+          command: |
+            # Insert the `distributionManagement` XML snippet from our env var secret
+            mvn_distro_xml=$(echo '$MVN_DISTRO_XML_BASE64' | base64 --decode)
+            sed -i '$i'"$mvn_distro_xml" pom.xml
+
+            mvn package
+            mvn deploy
+
+            cd modules/swagger-codegen
+            mvn deploy
+
+      - run:
+          # Reset the pom.xml so that the `restore_cache` and `save_cache` checksums are consistent, since
+          # the _version_ value in the pom may change in the `set maven version` step.
+          name: Reset pom.xml
+          command: git checkout pom.xml
+
+      - save_cache:
+          paths:
+            - ~/.m2
+          key: swagger-codegen-{{ checksum "pom.xml" }}
+
+
+
+
+workflows:
+  version: 2
+  next-platform-pipeline:
+    jobs:
+      - build:
+          context: next-platform-build
