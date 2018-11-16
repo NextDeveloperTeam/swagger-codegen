@@ -36,7 +36,8 @@ jobs:
             mvn_distro_xml=$(echo $MVN_DISTRO_XML_BASE64 | base64 --decode)
 
             xmlstarlet ed -N xmlns=http://maven.apache.org/POM/4.0.0 -s "/xmlns:project" -t elem -n distributionManagement \
-              -v "$(xmlstarlet sel -t -c "//distributionManagement/*" <<< "$mvn_distro_xml")" pom.xml | xmlstarlet unesc > pom.xml
+              -v "$(xmlstarlet sel -t -c "//distributionManagement/*" <<< "$mvn_distro_xml")" pom.xml | xmlstarlet unesc > pom.xml.tmp
+            mv pom.xml.tmp pom.xml
 
             mvn package
             mvn deploy
