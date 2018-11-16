@@ -27,7 +27,7 @@ jobs:
             echo "Final Maven version is: ${mvn_revision}"
 
             # Set parent/child modules to final version
-            mvn versions:set -DnewVersion=${mvn_revision}
+            mvn -B versions:set -DnewVersion=${mvn_revision}
 
       - run:
           name: Build and publish
@@ -39,11 +39,8 @@ jobs:
               -v "$(xmlstarlet sel -t -c "//distributionManagement/*" <<< "$mvn_distro_xml")" pom.xml | xmlstarlet unesc > pom.xml.tmp
             mv pom.xml.tmp pom.xml
 
-            mvn package
-            mvn deploy
-
-            cd modules/swagger-codegen
-            mvn deploy
+            mvn -B package
+            mvn -B deploy
 
       - run:
           # Reset the pom.xml so that the `restore_cache` and `save_cache` checksums are consistent, since
