@@ -2,7 +2,6 @@
 
 package {{package}};
 
-import {{invokerPackage}}.ApiException;
 {{#imports}}import {{import}};
 {{/imports}}
 import org.junit.Test;
@@ -21,7 +20,7 @@ import java.util.Map;
 @Ignore
 public class {{classname}}Test {
 
-    private final {{classname}} api = new {{classname}}();
+//    private final {{classname}} api = new {{classname}}();
 
     {{#operations}}{{#operation}}
     /**
@@ -29,15 +28,13 @@ public class {{classname}}Test {
      *
      * {{notes}}
      *
-     * @throws ApiException
-     *          if the Api call fails
      */
     @Test
-    public void {{operationId}}Test() throws ApiException {
+    public void {{operationId}}Test() {
         {{#allParams}}
         {{{dataType}}} {{paramName}} = null;
         {{/allParams}}
-        {{#returnType}}{{{returnType}}} response = {{/returnType}}api.{{operationId}}({{#allParams}}{{paramName}}{{#hasMore}}, {{/hasMore}}{{/allParams}});
+//        {{#returnType}}{{{returnType}}} response = {{/returnType}}api.{{operationId}}({{#allParams}}{{paramName}}{{#hasMore}}, {{/hasMore}}{{/allParams}});
 
         // TODO: test validations
     }
