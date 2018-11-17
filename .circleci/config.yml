@@ -10,54 +10,22 @@ jobs:
     steps:
       - checkout
 
-      - restore_cache:
-          keys:
-            - swagger-codegen-{{ checksum "pom.xml" }}
+      - setup_remote_docker
 
       - run:
-          name: Set Maven versions
+          name: Build and Publish Docker Image
           command: |
             if [[ ${CIRCLE_BRANCH} = master ]]; then
-              # First, determine what the final version should be after replacing the revision placeholder with the build number
-              mvn_revision=$(mvn help:evaluate -Dexpression=project.version -Drevision=${CIRCLE_BUILD_NUM} | egrep -v '\[|Download')
+              image_name=swagger-codegen-cli
+
+              docker build -t $DOCKER_REPO_URL/$image_name:$CIRCLE_SHA1 .
+              docker tag $DOCKER_REPO_URL/$image_name:$CIRCLE_SHA1 $DOCKER_REPO_URL/$image_name:latest
+
+              $(aws ecr get-login --no-include-email --region $AWS_DEFAULT_REGION)
+              docker push $DOCKER_REPO_URL/$image_name
             else
-              mvn_revision=$(mvn help:evaluate -Dexpression=project.version -Drevision=${CIRCLE_SHA1} | egrep -v '\[|Download')
+              echo "Skipping... not on master branch"
             fi
-
-            echo "Final Maven version is: ${mvn_revision}"
-
-            # Set parent/child modules to final version
-            mvn -B versions:set -DnewVersion=${mvn_revision}
-
-      - run:
-          name: Build and publish
-          command: |
-            # Insert the `distributionManagement` XML snippet from our env var secret
-            mvn_distro_xml=$(echo $MVN_DISTRO_XML_BASE64 | base64 --decode)
-
-            xmlstarlet ed -N xmlns=http://maven.apache.org/POM/4.0.0 -s "/xmlns:project" -t elem -n distributionManagement \
-              -v "$(xmlstarlet sel -t -c "//distributionManagement/*" <<< "$mvn_distro_xml")" pom.xml | xmlstarlet unesc > pom.xml.tmp
-            mv pom.xml.tmp pom.xml
-
-            mvn -B package
-            mvn -B deploy -N -DskipTests
-
-            cd modules/swagger-codegen
-            mvn -B deploy -DskipTests
-
-      - run:
-          # Reset the pom.xml so that the `restore_cache` and `save_cache` checksums are consistent, since
-          # the _version_ value in the pom may change in the `set maven version` step.
-          name: Reset pom.xml
-          command: git checkout pom.xml
-
-      - save_cache:
-          paths:
-            - ~/.m2
-          key: swagger-codegen-{{ checksum "pom.xml" }}
-
-
-
 
 workflows:
   version: 2
