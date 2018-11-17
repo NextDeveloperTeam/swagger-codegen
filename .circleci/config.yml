@@ -15,7 +15,7 @@ jobs:
       - run:
           name: Build and Publish Docker Image
           command: |
-            if [[ ${CIRCLE_BRANCH} = master ]]; then
+            #if [[ ${CIRCLE_BRANCH} = master ]]; then
               image_name=swagger-codegen-cli
 
               docker build -t $DOCKER_REPO_URL/$image_name:$CIRCLE_SHA1 .
@@ -23,9 +23,9 @@ jobs:
 
               $(aws ecr get-login --no-include-email --region $AWS_DEFAULT_REGION)
               docker push $DOCKER_REPO_URL/$image_name
-            else
-              echo "Skipping... not on master branch"
-            fi
+            #else
+            #  echo "Skipping... not on master branch"
+            #fi
 
 workflows:
   version: 2
