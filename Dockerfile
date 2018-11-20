@@ -22,7 +22,7 @@ COPY ./modules/swagger-generator ${GEN_DIR}/modules/swagger-generator
 COPY ./pom.xml ${GEN_DIR}
 
 # Pre-compile swagger-codegen-cli
-RUN mvn -am -pl "modules/swagger-codegen-cli" package
+RUN mvn -B -am -pl "modules/swagger-codegen-cli" package
 
 # This exists at the end of the file to benefit from cached layers when modifying docker-entrypoint.sh.
 COPY docker-entrypoint.sh /usr/local/bin/
